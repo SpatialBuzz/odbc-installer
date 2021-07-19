@@ -72,7 +72,7 @@ function get_credentials {
 function install_xcode {
     # xcode command line tools
     info "Installing xcode command line tools"
-    if [[ -n "$(xcode-select -p 2>&1 | grep 'unable to get active developer directory')" ]] ; then
+    if xcode-select -p 2>&1 | grep -q 'unable to get active developer directory' ; then
         # Install xcode command line tools
         xcode-select --install
     fi
