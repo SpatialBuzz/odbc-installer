@@ -46,7 +46,7 @@ function install_dmg {
 
 function get_customer_name {
     info "Enter the Customer ID e.g. demo_uk"
-    read -p "Customer ID: " CUSTOMER_ID
+    read -r -p "Customer ID: " CUSTOMER_ID
     echo
 
     CUSTOMER_ID_WITH_DASH="${CUSTOMER_ID//_/-}"
@@ -63,8 +63,8 @@ function get_sudo_credentials {
 function get_credentials {
     # ask for Amazon credentials
     info "Enter the Amazon Athena credentials for customer ${CUSTOMER_ID}"
-    read -p "Access Key: " AWS_KEY
-    read -s -p "Secret Key: " AWS_SECRET
+    read -r -p "Access Key: " AWS_KEY
+    read -r -s -p "Secret Key: " AWS_SECRET
     echo
     echo
 }
