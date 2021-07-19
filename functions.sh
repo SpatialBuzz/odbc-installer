@@ -223,7 +223,7 @@ EOF
     <OGRVRTLayer name='meas'>
         <SrcDataSource relativeToVRT="0">ODBC:${AWS_KEY}/${AWS_SECRET}@${CUSTOMER_ID}</SrcDataSource>
         <SrcSQL>
-$(cat "${TEST_SQL}" | xml esc)
+$(xml esc < "${TEST_SQL}")
         </SrcSQL>
         <GeometryType>wkbPoint</GeometryType>
         <GeometryField encoding="WKB" field="geom"/>
