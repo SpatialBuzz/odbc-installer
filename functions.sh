@@ -33,12 +33,16 @@ function install_dmg {
     curl -fsSL "$1" > "$tempd/pkg.dmg"
     listing=$(sudo hdiutil attach "$tempd/pkg.dmg" | grep Volumes)
     volume=$(echo "$listing" | cut -f 3)
-    if [ -e "$volume"/*.app ]; then
-      sudo cp -rf "$volume"/*.app /Applications
-    elif [ -e "$volume"/*.pkg ]; then
-      package=$(ls -1 "$volume" | grep .pkg | head -1)
-      sudo installer -pkg "$volume"/"$package" -target /
-    fi
+    for app in "$volume"/*.app ; do
+        if [ -e "${app}" ] ; then
+            echo sudo cp -rf "$volume"/*.app /Applications
+        fi
+    done
+    for pkg in "$volume"/*.pkg ; do
+        if [ -e "${pkg}" ] ; then
+            echo sudo installer -pkg "$volume"/"$pkg" -target /
+        fi
+    done
     disk=$(echo "$listing" | cut -f 1 -d ' ')
     sudo hdiutil detach "${disk}"
     rm -rf "$tempd"
