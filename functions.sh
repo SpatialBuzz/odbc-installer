@@ -52,13 +52,15 @@ function get_customer_name {
     CUSTOMER_ID_WITH_DASH="$(echo ${CUSTOMER_ID} | sed -e 's/_/-/g')"
 }
 
-
-function get_credentials {
+function get_sudo_credentials {
     # clear any sudo credentials to force a password prompt
     sudo -k
     info "Enter the password for user '$(whoami)'"
     sudo echo
+    echo
+}
 
+function get_credentials {
     # ask for Amazon credentials
     info "Enter the Amazon Athena credentials for customer ${CUSTOMER_ID}"
     read -p "Access Key: " AWS_KEY
@@ -79,8 +81,7 @@ function install_xcode {
 function install_homebrew {
     # homebrew
     info "Installing homebrew"
-    which -s brew
-    if [[ $? != 0 ]] ; then
+    if [[ -z "$(which brew)" ]] ; then
         # Install Homebrew
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     else
@@ -93,7 +94,6 @@ function install_homebrew {
     brew_install unixodbc 
     brew_install xmlstarlet
 }
-
 
 function install_athena_driver {
 
