@@ -258,10 +258,10 @@ EOF
 
 function launch_qgis {
     info "Launching QGIS with the test file"
-    open /Applications/QGIS.app ${TEST_SQLLITE}
+    open /Applications/QGIS.app ${TEST_SQLLITE} || true
 }
 
 function launch_odbc_admin {
     info "Launching iODBC Administrator64"
-    open '/Applications/iODBC/iODBC Administrator64.app'
+    open '/Applications/iODBC/iODBC Administrator64.app' || true
 }
