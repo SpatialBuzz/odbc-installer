@@ -5,14 +5,14 @@ YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
 function info {
-    printf "\r💬 ${BLUE}INFO:${NC}  ${1}\n"
+    printf "\r💬 ${BLUE}INFO:${NC} %s\n" "${1}"
 }
 function fail {
-    printf "\r🗯 ${RED}ERROR:${NC} ${1}\n"
+    printf "\r🗯 ${RED}ERROR:${NC} %s\n" "${1}"
     exit 1
 }
 function warn {
-    printf "\r⚠️  ${YELLOW}WARNING:${NC}  ${1}\n"
+    printf "\r⚠️ ${YELLOW}WARNING:${NC} %s\n" "${1}"
 }
 
 function brew_install {
