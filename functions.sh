@@ -49,7 +49,7 @@ function get_customer_name {
     read -p "Customer ID: " CUSTOMER_ID
     echo
 
-    CUSTOMER_ID_WITH_DASH="$(echo ${CUSTOMER_ID} | sed -e 's/_/-/g')"
+    CUSTOMER_ID_WITH_DASH="${CUSTOMER_ID//_/-}"
 }
 
 function get_sudo_credentials {
