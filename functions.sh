@@ -19,11 +19,11 @@ function brew_install {
     package=$1
     if brew list --formula | grep -q "$package" ;
     then
-        info "Installing ${package}"
-        brew install "$package"
-    else
         info "Upgrading ${package}"
         brew upgrade "$package"
+    else
+        info "Installing ${package}"
+        brew install "$package"
     fi
 }
 
@@ -35,12 +35,12 @@ function install_dmg {
     volume=$(echo "$listing" | cut -f 3)
     for app in "$volume"/*.app ; do
         if [ -e "${app}" ] ; then
-            echo sudo cp -rf "$volume"/*.app /Applications
+            sudo cp -rf "${app}" /Applications
         fi
     done
     for pkg in "$volume"/*.pkg ; do
         if [ -e "${pkg}" ] ; then
-            echo sudo installer -pkg "$volume"/"$pkg" -target /
+            sudo installer -pkg "${pkg}" -target /
         fi
     done
     disk=$(echo "$listing" | cut -f 1 -d ' ')
@@ -100,7 +100,6 @@ function install_homebrew {
 }
 
 function install_athena_driver {
-
     # install Athena ODBC driver
     info "Installing Athena ODBC driver - ignore any installation windows that appear"
     install_dmg "https://s3.amazonaws.com/athena-downloads/drivers/ODBC/SimbaAthenaODBC_1.1.10.1000/OSX/Simba+Athena+1.1.dmg"
