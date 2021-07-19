@@ -5,21 +5,21 @@ YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
 function info {
-    printf "\r💬 ${BLUE}INFO:${NC}  ${1}\n"
+    printf "\r💬 ${BLUE}INFO:${NC} %s\n" "${1}"
 }
 function fail {
-    printf "\r🗯 ${RED}ERROR:${NC} ${1}\n"
+    printf "\r🗯 ${RED}ERROR:${NC} %s\n" "${1}"
     exit 1
 }
 function warn {
-    printf "\r⚠️  ${YELLOW}WARNING:${NC}  ${1}\n"
+    printf "\r⚠️ ${YELLOW}WARNING:${NC} %s\n" "${1}"
 }
 
 function brew_install {
     package=$1
-    if [ -z "$(brew list --formula | grep $package)" ];
+    if brew list --formula | grep -q "$package" ;
     then
-        warn "Installing ${package}"
+        info "Installing ${package}"
         brew install $package
     else
         info "Upgrading ${package}"
@@ -49,16 +49,18 @@ function get_customer_name {
     read -p "Customer ID: " CUSTOMER_ID
     echo
 
-    CUSTOMER_ID_WITH_DASH="$(echo ${CUSTOMER_ID} | sed -e 's/_/-/g')"
+    CUSTOMER_ID_WITH_DASH="${CUSTOMER_ID//_/-}"
 }
 
-
-function get_credentials {
+function get_sudo_credentials {
     # clear any sudo credentials to force a password prompt
     sudo -k
     info "Enter the password for user '$(whoami)'"
     sudo echo
+    echo
+}
 
+function get_credentials {
     # ask for Amazon credentials
     info "Enter the Amazon Athena credentials for customer ${CUSTOMER_ID}"
     read -p "Access Key: " AWS_KEY
@@ -70,8 +72,7 @@ function get_credentials {
 function install_xcode {
     # xcode command line tools
     info "Installing xcode command line tools"
-    xcode-select -p 1>/dev/null
-    if [[ $? != 0 ]] ; then
+    if [[ -n "$(xcode-select -p 2>&1 | grep 'unable to get active developer directory')" ]] ; then
         # Install xcode command line tools
         xcode-select --install
     fi
@@ -80,8 +81,7 @@ function install_xcode {
 function install_homebrew {
     # homebrew
     info "Installing homebrew"
-    which -s brew
-    if [[ $? != 0 ]] ; then
+    if [[ -z "$(which brew)" ]] ; then
         # Install Homebrew
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     else
@@ -94,7 +94,6 @@ function install_homebrew {
     brew_install unixodbc 
     brew_install xmlstarlet
 }
-
 
 function install_athena_driver {
 
@@ -119,10 +118,10 @@ function check_user_odbc_settings {
         warn "User ODBC settings exist"
         echo
         warn "contents of ~/Library/ODBC/odbcinst.ini"
-        cat ~/Library/ODBC/odbcinst.ini
+        cat ~/Library/ODBC/odbcinst.ini || true
         echo
         warn "contents of ~/Library/ODBC/odbc.ini"
-        cat ~/Library/ODBC/odbc.ini
+        cat ~/Library/ODBC/odbc.ini || true
         echo
 
         read -p "OK to replace User ODBC settings ? " -n 1 -r
@@ -259,10 +258,10 @@ EOF
 
 function launch_qgis {
     info "Launching QGIS with the test file"
-    open /Applications/QGIS.app ${TEST_SQLLITE}
+    open /Applications/QGIS.app ${TEST_SQLLITE} || true
 }
 
 function launch_odbc_admin {
     info "Launching iODBC Administrator64"
-    open '/Applications/iODBC/iODBC Administrator64.app'
+    open '/Applications/iODBC/iODBC Administrator64.app' || true
 }

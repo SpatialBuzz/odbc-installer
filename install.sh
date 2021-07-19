@@ -6,6 +6,7 @@ source functions.sh
 
 check_user_odbc_settings
 get_customer_name
+get_sudo_credentials
 get_credentials
 install_xcode
 install_homebrew
