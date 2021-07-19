@@ -20,18 +20,18 @@ function brew_install {
     if brew list --formula | grep -q "$package" ;
     then
         info "Installing ${package}"
-        brew install $package
+        brew install "$package"
     else
         info "Upgrading ${package}"
-        brew upgrade $package
+        brew upgrade "$package"
     fi
 }
 
 # based upon https://apple.stackexchange.com/a/311511
 function install_dmg {
     tempd=$(mktemp -d)
-    curl -fsSL $1 > $tempd/pkg.dmg
-    listing=$(sudo hdiutil attach $tempd/pkg.dmg | grep Volumes)
+    curl -fsSL "$1" > "$tempd/pkg.dmg"
+    listing=$(sudo hdiutil attach "$tempd/pkg.dmg" | grep Volumes)
     volume=$(echo "$listing" | cut -f 3)
     if [ -e "$volume"/*.app ]; then
       sudo cp -rf "$volume"/*.app /Applications
@@ -41,7 +41,7 @@ function install_dmg {
     fi
     disk=$(echo "$listing" | cut -f 1 -d ' ')
     sudo hdiutil detach "${disk}"
-    rm -rf $tempd
+    rm -rf "$tempd"
 }
 
 function get_customer_name {
@@ -141,7 +141,7 @@ function install_dsn {
     info "Installing ODBC User DSN"
     sudo mkdir -p /Library/ODBC/
     sudo mkdir -p ~/Library/ODBC/
-    sudo chown -R $(whoami):staff ~/Library/ODBC/
+    sudo chown -R "$(whoami)":staff ~/Library/ODBC/
 
     cat << EOF > ~/Library/ODBC/odbcinst.ini
 [ODBC Drivers]
@@ -176,7 +176,7 @@ function test_odbc {
     TEST_SQLLITE=~/Desktop/test-odbc-${CUSTOMER_ID}.sqlite
     TEST_SQL=~/Desktop/test-odbc-${CUSTOMER_ID}.sql
 
-    cat << EOF > ${TEST_SQL}
+    cat << EOF > "${TEST_SQL}"
 select
       id
     , timestamp_normalised
@@ -218,12 +218,12 @@ limit 200;
 EOF
 
     # when including the SQL, we need to escape special XML characters
-    cat << EOF > ${TEST_VRT}
+    cat << EOF > "${TEST_VRT}"
 <OGRVRTDataSource>
     <OGRVRTLayer name='meas'>
         <SrcDataSource relativeToVRT="0">ODBC:${AWS_KEY}/${AWS_SECRET}@${CUSTOMER_ID}</SrcDataSource>
         <SrcSQL>
-$(cat ${TEST_SQL} | xml esc)
+$(cat "${TEST_SQL}" | xml esc)
         </SrcSQL>
         <GeometryType>wkbPoint</GeometryType>
         <GeometryField encoding="WKB" field="geom"/>
@@ -258,7 +258,7 @@ EOF
 
 function launch_qgis {
     info "Launching QGIS with the test file"
-    open /Applications/QGIS.app ${TEST_SQLLITE} || true
+    open /Applications/QGIS.app "${TEST_SQLLITE}" || true
 }
 
 function launch_odbc_admin {
