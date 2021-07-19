@@ -19,7 +19,7 @@ function brew_install {
     package=$1
     if [ -z "$(brew list --formula | grep $package)" ];
     then
-        warn "Installing ${package}"
+        info "Installing ${package}"
         brew install $package
     else
         info "Upgrading ${package}"
