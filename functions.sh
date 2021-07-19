@@ -234,26 +234,26 @@ EOF
 
     info "Testing VRT can connect to ODBC DSN to Athena"
 
-    CMD="ogrinfo ${TEST_VRT} -so meas"
+    CMD=(ogrinfo "${TEST_VRT}" -so meas)
     info "Running: "
-    info " ${CMD}"
+    info " ${CMD[*]}"
     info ""
-    ${CMD}
+    "${CMD[@]}"
 
     info ""
     info "Creating Spatialite version of VRT"
-    CMD="ogr2ogr -lco 'OVERWRITE=YES' ${TEST_SQLLITE} ${TEST_VRT}"
+    CMD=(ogr2ogr -lco 'OVERWRITE=YES' "${TEST_SQLLITE}" "${TEST_VRT}")
     info "Running: "
-    info " ${CMD}"
+    info " ${CMD[*]}"
     info ""
-    ${CMD}
+    "${CMD[@]}"
 
     info ""
-    CMD="ogrinfo ${TEST_SQLLITE} -so meas"
+    CMD=(ogrinfo "${TEST_SQLLITE}" -so meas)
     info "Running: "
-    info " ${CMD}"
+    info " ${CMD[*]}"
     info ""
-    ${CMD}
+    "${CMD[@]}"
 }
 
 function launch_qgis {
