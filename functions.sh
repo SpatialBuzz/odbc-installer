@@ -17,7 +17,7 @@ function warn {
 
 function brew_install {
     package=$1
-    if [ -z "$(brew list --formula | grep $package)" ];
+    if brew list --formula | grep -q "$package" ;
     then
         info "Installing ${package}"
         brew install $package
