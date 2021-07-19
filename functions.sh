@@ -118,10 +118,10 @@ function check_user_odbc_settings {
         warn "User ODBC settings exist"
         echo
         warn "contents of ~/Library/ODBC/odbcinst.ini"
-        cat ~/Library/ODBC/odbcinst.ini
+        cat ~/Library/ODBC/odbcinst.ini || true
         echo
         warn "contents of ~/Library/ODBC/odbc.ini"
-        cat ~/Library/ODBC/odbc.ini
+        cat ~/Library/ODBC/odbc.ini || true
         echo
 
         read -p "OK to replace User ODBC settings ? " -n 1 -r
