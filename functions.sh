@@ -245,7 +245,7 @@ EOF
 
     info ""
     info "Creating Spatialite version of VRT"
-    CMD=(ogr2ogr -lco 'OVERWRITE=YES' "${TEST_SQLLITE}" "${TEST_VRT}" --debug on)
+    CMD=(ogr2ogr -f SQLite -lco 'OVERWRITE=YES' -nln meas -lco SPATIAL_INDEX=YES -dsco SPATIALITE=YES -gt 65536 "${TEST_SQLLITE}" "${TEST_VRT}" --debug on)
     info "Running: "
     info " ${CMD[*]}"
     info ""
