@@ -19,34 +19,38 @@ function brew_install {
     package=$1
     if brew list --formula | grep -q "$package" ;
     then
-        info "Installing ${package}"
-        brew install $package
-    else
         info "Upgrading ${package}"
-        brew upgrade $package
+        brew upgrade "$package"
+    else
+        info "Installing ${package}"
+        brew install "$package"
     fi
 }
 
 # based upon https://apple.stackexchange.com/a/311511
 function install_dmg {
     tempd=$(mktemp -d)
-    curl -fsSL $1 > $tempd/pkg.dmg
-    listing=$(sudo hdiutil attach $tempd/pkg.dmg | grep Volumes)
+    curl -fsSL "$1" > "$tempd/pkg.dmg"
+    listing=$(sudo hdiutil attach "$tempd/pkg.dmg" | grep Volumes)
     volume=$(echo "$listing" | cut -f 3)
-    if [ -e "$volume"/*.app ]; then
-      sudo cp -rf "$volume"/*.app /Applications
-    elif [ -e "$volume"/*.pkg ]; then
-      package=$(ls -1 "$volume" | grep .pkg | head -1)
-      sudo installer -pkg "$volume"/"$package" -target /
-    fi
+    for app in "$volume"/*.app ; do
+        if [ -e "${app}" ] ; then
+            sudo cp -rf "${app}" /Applications
+        fi
+    done
+    for pkg in "$volume"/*.pkg ; do
+        if [ -e "${pkg}" ] ; then
+            sudo installer -pkg "${pkg}" -target /
+        fi
+    done
     disk=$(echo "$listing" | cut -f 1 -d ' ')
     sudo hdiutil detach "${disk}"
-    rm -rf $tempd
+    rm -rf "$tempd"
 }
 
 function get_customer_name {
     info "Enter the Customer ID e.g. demo_uk"
-    read -p "Customer ID: " CUSTOMER_ID
+    read -r -p "Customer ID: " CUSTOMER_ID
     echo
 
     CUSTOMER_ID_WITH_DASH="${CUSTOMER_ID//_/-}"
@@ -63,8 +67,8 @@ function get_sudo_credentials {
 function get_credentials {
     # ask for Amazon credentials
     info "Enter the Amazon Athena credentials for customer ${CUSTOMER_ID}"
-    read -p "Access Key: " AWS_KEY
-    read -s -p "Secret Key: " AWS_SECRET
+    read -r -p "Access Key: " AWS_KEY
+    read -r -s -p "Secret Key: " AWS_SECRET
     echo
     echo
 }
@@ -72,7 +76,7 @@ function get_credentials {
 function install_xcode {
     # xcode command line tools
     info "Installing xcode command line tools"
-    if [[ -n "$(xcode-select -p 2>&1 | grep 'unable to get active developer directory')" ]] ; then
+    if xcode-select -p 2>&1 | grep -q 'unable to get active developer directory' ; then
         # Install xcode command line tools
         xcode-select --install
     fi
@@ -96,7 +100,6 @@ function install_homebrew {
 }
 
 function install_athena_driver {
-
     # install Athena ODBC driver
     info "Installing Athena ODBC driver - ignore any installation windows that appear"
     install_dmg "https://s3.amazonaws.com/athena-downloads/drivers/ODBC/SimbaAthenaODBC_1.1.10.1000/OSX/Simba+Athena+1.1.dmg"
@@ -141,7 +144,7 @@ function install_dsn {
     info "Installing ODBC User DSN"
     sudo mkdir -p /Library/ODBC/
     sudo mkdir -p ~/Library/ODBC/
-    sudo chown -R $(whoami):staff ~/Library/ODBC/
+    sudo chown -R "$(whoami)":staff ~/Library/ODBC/
 
     cat << EOF > ~/Library/ODBC/odbcinst.ini
 [ODBC Drivers]
@@ -176,7 +179,7 @@ function test_odbc {
     TEST_SQLLITE=~/Desktop/test-odbc-${CUSTOMER_ID}.sqlite
     TEST_SQL=~/Desktop/test-odbc-${CUSTOMER_ID}.sql
 
-    cat << EOF > ${TEST_SQL}
+    cat << EOF > "${TEST_SQL}"
 select
       id
     , timestamp_normalised
@@ -218,12 +221,12 @@ limit 200;
 EOF
 
     # when including the SQL, we need to escape special XML characters
-    cat << EOF > ${TEST_VRT}
+    cat << EOF > "${TEST_VRT}"
 <OGRVRTDataSource>
     <OGRVRTLayer name='meas'>
         <SrcDataSource relativeToVRT="0">ODBC:${AWS_KEY}/${AWS_SECRET}@${CUSTOMER_ID}</SrcDataSource>
         <SrcSQL>
-$(cat ${TEST_SQL} | xml esc)
+$(xml esc < "${TEST_SQL}")
         </SrcSQL>
         <GeometryType>wkbPoint</GeometryType>
         <GeometryField encoding="WKB" field="geom"/>
@@ -234,31 +237,31 @@ EOF
 
     info "Testing VRT can connect to ODBC DSN to Athena"
 
-    CMD="ogrinfo ${TEST_VRT} -so meas"
+    CMD=(ogrinfo "${TEST_VRT}" -so meas)
     info "Running: "
-    info " ${CMD}"
+    info " ${CMD[*]}"
     info ""
-    ${CMD}
+    "${CMD[@]}"
 
     info ""
     info "Creating Spatialite version of VRT"
-    CMD="ogr2ogr -lco 'OVERWRITE=YES' ${TEST_SQLLITE} ${TEST_VRT}"
+    CMD=(ogr2ogr -lco 'OVERWRITE=YES' "${TEST_SQLLITE}" "${TEST_VRT}")
     info "Running: "
-    info " ${CMD}"
+    info " ${CMD[*]}"
     info ""
-    ${CMD}
+    "${CMD[@]}"
 
     info ""
-    CMD="ogrinfo ${TEST_SQLLITE} -so meas"
+    CMD=(ogrinfo "${TEST_SQLLITE}" -so meas)
     info "Running: "
-    info " ${CMD}"
+    info " ${CMD[*]}"
     info ""
-    ${CMD}
+    "${CMD[@]}"
 }
 
 function launch_qgis {
     info "Launching QGIS with the test file"
-    open /Applications/QGIS.app ${TEST_SQLLITE} || true
+    open /Applications/QGIS.app "${TEST_SQLLITE}" || true
 }
 
 function launch_odbc_admin {
