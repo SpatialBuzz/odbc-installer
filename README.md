@@ -23,9 +23,18 @@ Open a terminal prompt and `cd` into the directory containing the installation f
 You will be prompted for:
 * Customer ID e.g. demo_uk
 * Your password
-* Your Athena credentials
 
 Please do not interact with the windows that briefly appear as the drivers are installed. 
+
+
+## Verify Installation
+
+Once the installation is complete, run `./test-odbc.sh` to confirm you can connect successfully to Athena.
+
+You will be prompted for:
+* Customer ID e.g. demo_uk
+* Your Athena credentials
+
 
 ## Connecting to Athena using a GDAL VRT file
 

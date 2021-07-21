@@ -64,7 +64,7 @@ function get_sudo_credentials {
     echo
 }
 
-function get_credentials {
+function get_athena_credentials {
     # ask for Amazon credentials
     info "Enter the Amazon Athena credentials for customer ${CUSTOMER_ID}"
     read -r -p "Access Key: " AWS_KEY
@@ -245,7 +245,7 @@ EOF
 
     info ""
     info "Creating Spatialite version of VRT"
-    CMD=(ogr2ogr -lco 'OVERWRITE=YES' "${TEST_SQLLITE}" "${TEST_VRT}")
+    CMD=(ogr2ogr -f SQLite -lco 'OVERWRITE=YES' -nln meas -lco SPATIAL_INDEX=YES -dsco SPATIALITE=YES -gt 65536 "${TEST_SQLLITE}" "${TEST_VRT}" --debug on)
     info "Running: "
     info " ${CMD[*]}"
     info ""
