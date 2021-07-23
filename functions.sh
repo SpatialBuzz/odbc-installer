@@ -1,8 +1,10 @@
-
 RED='\033[0;31m'
 BLUE='\033[0;34m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
+
+# DEBUG="--debug on"
+DEBUG=""
 
 function info {
     printf "\r💬 ${BLUE}INFO:${NC} %s\n" "${1}"
@@ -172,14 +174,9 @@ EOF
     sudo chmod 644 ~/Library/ODBC/odbc*.ini
 }
 
-function test_odbc {
+function create_test_sql {
 
-    # create test VRT
-    TEST_VRT=~/Desktop/test-odbc-${CUSTOMER_ID}.vrt
-    TEST_SQLLITE=~/Desktop/test-odbc-${CUSTOMER_ID}.sqlite
-    TEST_SQL=~/Desktop/test-odbc-${CUSTOMER_ID}.sql
-
-    cat << EOF > "${TEST_SQL}"
+    cat << EOF > "${FILE_SQL}"
 select
       id
     , timestamp_normalised
@@ -220,13 +217,17 @@ where
 limit 200;
 EOF
 
+}
+
+function create_vrt {
+
     # when including the SQL, we need to escape special XML characters
-    cat << EOF > "${TEST_VRT}"
+    cat << EOF > "${FILE_VRT}"
 <OGRVRTDataSource>
     <OGRVRTLayer name='meas'>
         <SrcDataSource relativeToVRT="0">ODBC:${AWS_KEY}/${AWS_SECRET}@${CUSTOMER_ID}</SrcDataSource>
         <SrcSQL>
-$(xml esc < "${TEST_SQL}")
+$(xml esc < "${FILE_SQL}")
         </SrcSQL>
         <GeometryType>wkbPoint</GeometryType>
         <GeometryField encoding="WKB" field="geom"/>
@@ -235,36 +236,76 @@ $(xml esc < "${TEST_SQL}")
 </OGRVRTDataSource>
 EOF
 
+}
+
+
+function verify_vrt_can_connect {
+
     info "Testing VRT can connect to ODBC DSN to Athena"
-
-    CMD=(ogrinfo "${TEST_VRT}" -so meas)
+    CMD=(ogrinfo "${FILE_VRT}" -so meas)
     info "Running: "
     info " ${CMD[*]}"
     info ""
     "${CMD[@]}"
-
     info ""
+
+}
+
+function convert_vrt_to_spatialite {
+
     info "Creating Spatialite version of VRT"
-    CMD=(ogr2ogr -f SQLite -lco 'OVERWRITE=YES' -nln meas -lco SPATIAL_INDEX=YES -dsco SPATIALITE=YES -gt 65536 "${TEST_SQLLITE}" "${TEST_VRT}" --debug on)
+    CMD=(ogr2ogr -f SQLite -lco 'OVERWRITE=YES' -nln meas -lco SPATIAL_INDEX=YES -dsco SPATIALITE=YES -gt 65536 "${FILE_SQLITE}" "${FILE_VRT}" ${DEBUG})
     info "Running: "
     info " ${CMD[*]}"
     info ""
     "${CMD[@]}"
+    info ""
 
-    info ""
-    CMD=(ogrinfo "${TEST_SQLLITE}" -so meas)
+}
+
+function verify_spatialite_file {
+
+    info "Testing Spatialite file"
+    CMD=(ogrinfo "${FILE_SQLITE}" -so meas ${DEBUG})
     info "Running: "
     info " ${CMD[*]}"
     info ""
     "${CMD[@]}"
+    info ""
+
+}
+
+function convert_sql_to_spatialite {
+    FILE_VRT="$(dirname ${FILE_SQL})/$(basename ${FILE_SQL} .sql).vrt"
+    FILE_SQLITE="$(dirname ${FILE_SQL})/$(basename ${FILE_SQL} .sql).sqlite"
+
+    create_vrt
+    verify_vrt_can_connect
+    convert_vrt_to_spatialite
+    verify_spatialite_file
+
+}
+
+
+function test_odbc {
+
+    # create SQL
+    FILE_SQL=~/Desktop/test-odbc-${CUSTOMER_ID}.sql
+    create_test_sql
+
+    convert_sql_to_spatialite
+
+    launch_qgis
+    launch_odbc_admin
 }
 
 function launch_qgis {
+
     info "Launching QGIS with the test file"
-    open /Applications/QGIS.app "${TEST_SQLLITE}" || true
+    open -n -a "QGIS" "${FILE_SQLITE}" || true
 }
 
 function launch_odbc_admin {
     info "Launching iODBC Administrator64"
-    open '/Applications/iODBC/iODBC Administrator64.app' || true
+    open -g -a "iODBC Administrator64" || true
 }

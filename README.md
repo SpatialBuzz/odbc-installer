@@ -4,7 +4,7 @@
 
 As QGIS cannot directly connect to Athena databases, we recommend that a GDAL Virtual Dataset (VRT file) is used to act as a proxy to Athena via an ODBC database connection.
 
-We recommended converting the VRT containing the dynamic query into a Spatialite database. This will force the download of the measurement data locally, and also gives the option of creating a spatial index to improve QGIS map viewing performance.
+We recommended converting the VRT containing the dynamic query into a Spatialite database. This will force the download of the measurement data locally, and also creates a spatial index to improve QGIS map viewing performance.
 
 ## Packages
 
@@ -18,34 +18,106 @@ The following packages will be installed if required:
 
 ## Installation
 
-Open a terminal prompt and `cd` into the directory containing the installation files. Then run `./install.sh`
+Extract the release ZIP file into a folder. Open a terminal prompt and then `cd` into the directory containing the installation files. 
+
+Run `./install.sh` to start the installation. 
 
 You will be prompted for:
-* Customer ID e.g. demo_uk
+* Customer ID e.g. demo_uk (use an underscore rather than minus)
 * Your password
+
+The install may take some time. Please wait until the prompt confirms the installation has finished.
 
 Please do not interact with the windows that briefly appear as the drivers are installed. 
 
 
 ## Verify Installation
 
-Once the installation is complete, run `./test-odbc.sh` to confirm you can connect successfully to Athena.
+Once the installation is complete, run `./test-odbc.sh` to confirm you can connect successfully to Athena and create the Spatialite point file.
 
 You will be prompted for:
-* Customer ID e.g. demo_uk
+* Customer ID e.g. demo_uk (use an underscore rather than minus)
 * Your Athena credentials
 
+Once the `./test-odbc.sh` script has completed, three files will be created in `~/Desktop/`:
+* `test-odbc-CUSTOMER_ID.sql` - example SQL file
+* `test-odbc-CUSTOMER_ID.vrt` - GDAL virtual dataset file
+* `test-odbc-CUSTOMER_ID.sqlite` - Spatialite point file
 
-## Connecting to Athena using a GDAL VRT file
+If QGIS is installed, the `test-odbc-CUSTOMER_ID.sqlite` file will be opened automatically.
 
-At the end of the installation a test GDAL VRT file will be created in `~/Desktop/`. The VRT contains an SQL query to connect to Athena.
+**Note: The VRT file contains your personal Athena credentials, so please keep that file secure.**
 
-The VRT file is in XML format, so the SQL operators `>` and `<` must be escaped:
 
-* replace `>` with `&gt;`
-* replace `<` with `&lt;`
+## Creating a Spatialite file from an SQL file
 
-**Example VRT file**
+You can create your own or modify the test SQL file to extract different columns and time periods from Athena.
+
+Use the `./create_spatialite_from_sql.sh` command to perform all the steps involved.
+
+For example:
+
+```
+./create_spatialite_from_sql.sh ~/Desktop/test-odbc-demo_uk.sql
+
+💬 INFO: Enter the Customer ID e.g. demo_uk
+Customer ID: demo_uk
+
+💬 INFO: Enter the Amazon Athena credentials for customer demo_uk
+Access Key: AKIAxxxxxxxxxxxxxxxx
+Secret Key:
+
+💬 INFO: Testing VRT can connect to ODBC DSN to Athena
+💬 INFO: Running:
+💬 INFO:  ogrinfo /Users/fred/Desktop/test-odbc-demo_uk.vrt -so meas
+💬 INFO:
+INFO: Open of `/Users/fred/Desktop/test-odbc-demo_uk.vrt'
+      using driver `OGR_VRT' successful.
+
+Layer name: meas
+Geometry: Point
+Feature Count: 200
+
+...
+
+💬 INFO:
+💬 INFO: Creating Spatialite version of VRT
+💬 INFO: Running:
+💬 INFO:  ogr2ogr -f SQLite -lco OVERWRITE=YES -nln meas -lco SPATIAL_INDEX=YES -dsco SPATIALITE=YES -gt 65536 /Users/fred/Desktop/test-odbc-demo_uk.sqlite /Users/fred/Desktop/test-odbc-demo_uk.vrt
+💬 INFO:
+💬 INFO:
+💬 INFO: Testing Spatialite file
+💬 INFO: Running:
+💬 INFO:  ogrinfo /Users/fred/Desktop/test-odbc-demo_uk.sqlite -so meas
+💬 INFO:
+INFO: Open of `/Users/fred/Desktop/test-odbc-demo_uk.sqlite'
+      using driver `SQLite' successful.
+
+Layer name: meas
+Geometry: Point
+Feature Count: 200
+
+...
+
+💬 INFO: Created: /Users/fred/Desktop/test-odbc-demo_uk.vrt
+💬 INFO: Created: /Users/fred/Desktop/test-odbc-demo_uk.sqlite
+
+```
+
+## Manually creating a Spatialite file
+
+The following example shows the command line arguments to `ogr2ogr` to convert a VRT to Spatialite format.  
+
+`ogr2ogr -f SQLite -lco OVERWRITE=YES -nln meas -lco SPATIAL_INDEX=YES -dsco SPATIALITE=YES -gt 65536 /Users/fred/Desktop/test-odbc-demo_uk.sqlite /Users/fred/Desktop/test-odbc-demo_uk.vrt`
+
+Note: the VRT file is in XML format and contains the Athena SQL query. 
+
+Your SQL query may contain forbidden XML characters and so must be escaped. The `create_spatialite_from_sql.sh` script handles that escaping automatically for you, but if you prefer to edit that file directly, you must replace the following characters:
+
+* `>` with `&gt;`
+* `<` with `&lt;`
+
+**Example SQL escaped within a VRT file**
 
 ```
 <OGRVRTDataSource>
@@ -97,7 +169,3 @@ limit 200;
     </OGRVRTLayer>
 </OGRVRTDataSource>
 ```
-
-During the installation, the test VRT is also converted to Spatialite (.sqlite) format and previewed using QGIS.
-
-**Note: The VRT file contains your personal Athena credentials, so please keep that file secure.**
